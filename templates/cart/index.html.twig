@@ -1,0 +1,111 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="{{ asset('css/style.css') }}" rel="stylesheet"  />
+{% endblock %}
+
+{% block body %}
+    <div class="card">
+        <div class="card-header">
+            <h3>Votre panier</h3>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Produit</th>
+                        <th>Marque</th>
+                        <th>Prix unitaire(HT)</th>
+                        <th>Quantité</th>
+                        <th>Sous-total HT</th>
+                        <th>Sous-total TTC</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set total_ht = 0 %}
+                    {% set total_ttc = 0 %}
+                    {% for item in order.items %}
+                        <tr>
+                            <td>{{ item.product.title }}</td>
+                            <td>{{ item.product.brand.name }}</td>
+                            <td>{{ item.product.price|round(2, 'common')|number_format(2, ',', ' ') }} €</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ (item.product.price * item.quantity)|round(2, 'common')|number_format(2, ',', ' ') }} €</td>
+                            <td>
+                                {{ ((item.product.price * item.product.brand.vat) * item.quantity)|round(2, 'common')
+                                |number_format(2, ',', ' ') }} €
+                            </td>
+                        </tr>
+                        {% set total_ht = total_ht + item.product.price * item.quantity %}
+                        {% set total_ttc = total_ttc + (item.product.price * item.product.brand.vat) * item.quantity %}
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title mx-auto" style="width: 20%;">
+                        <h5>Promotions éligibles</h5>
+                    </div>
+                </div>
+                <div class="card-body row">
+                    {% for promotion in promotions  %}
+                        <div class="card promotion col-4"
+                             data-min-amount="{{ promotion.minAmount }}"
+                             data-reduction="{{ promotion.reduction }}"
+                             data-free-delivery="{{ promotion.freeDelivery }}"
+                             data-date="{{ promotion.date | date('y-m-d') }}"
+                             data-product-count="{{ promotion.productCount }}"
+                             data-number-of-use="{{ promotion.numberOfUse }}"
+                             data-delivery="{{ delivery }}"
+                             data-total_ht="{{ total_ht }}"
+                             data-total_ttc="{{ total_ttc }}">
+                            <div class="card-body">
+                                <p>
+                                    Montant minimum requis : {{ promotion.minAmount
+                                    |number_format(2, ',', ' ') }} €
+                                </p>
+                                <p>Réduction: {{ promotion.reduction }}%</p>
+                                <p>Frais de port offerts :
+                                    {% if promotion.freeDelivery == true %}
+                                        Oui
+                                    {% else %}
+                                        Non
+                                    {% endif %}</p>
+                                <p>
+                                    {% if promotion.date is not null %}
+                                        Valable jusqu'au : {{ promotion.date | date('d M Y') }}
+                                    {% else %}
+                                        Valable indéfiniment
+                                    {% endif %}
+                                </p>
+                                <p>Nombre de produits minimum requis: {{ promotion.productCount }}</p>
+                                <p>Vous pouvez l'appliquer {{ promotion.numberOfUse }} fois maximum</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="include_total_table">
+                {% include 'cart/includes/total_table.html.twig' with {
+                    'delivery': delivery,
+                    'total_ht': total_ht,
+                    'total_ttc': total_ttc
+                } %}
+            </div>
+
+            <form action="{{ path('cart_payment') }}" method="POST" >
+                <input id="total_ttc" type="hidden" name="cost" value="{{ total_ttc }}" />
+                <input type="submit" class="btn btn-success float-end" value="Passer la commande" />
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        const route = "{{ path('cart_promotion')|escape('js') }}";
+    </script>
+    <script src="{{ asset('js/promotion.js') }}"></script>
+{% endblock %}

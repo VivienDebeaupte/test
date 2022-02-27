@@ -1,0 +1,28 @@
+<table class="table">
+    <thead>
+    <tr>
+        <th></th>
+        <th></th>
+        <th></th>
+        <th>Frais de port HT</th>
+        <th>Total HT</th>
+        <th>Total TTC</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>
+            {{ delivery|round(2, 'common')|number_format(2, ',', ' ') }} €
+        </td>
+        <td>
+            {{ (total_ht + delivery)|round(2, 'common')|number_format(2, ',', ' ') }} €
+        </td>
+        <td>
+            {{ (total_ttc + delivery)|round(2, 'common')|number_format(2, ',', ' ') }} €
+        </td>
+    </tr>
+    </tbody>
+</table>
